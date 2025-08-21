@@ -1,0 +1,22 @@
+{
+    "name": "hbvsoft/charthandler",
+    "description": "ChartHandler package with HBVSoft\\ChartHandler namespace",
+    "type": "library",
+    "require": {
+        "php": ">=8.0",
+        "hbvsoft/jpgraph": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "HBVSoft\\ChartHandler\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:YourUserName/ChartHandler.git"
+        }
+    ]
+}
