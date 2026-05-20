@@ -131,6 +131,87 @@ Chart::pie($data)
 Per-slice / per-series colors and labels are available via the lower-level `Series` /
 `DataPoint` value objects in `HBVSoft\ChartHandler\Spec`.
 
+## A complete example
+
+```php
+<?php
+
+require __DIR__ . '/vendor/autoload.php';
+
+use HBVSoft\ChartHandler\Chart;
+use HBVSoft\ChartHandler\Spec\Axis;
+use HBVSoft\ChartHandler\Spec\Series;
+
+// 1) A pie, saved straight to PNG (format inferred from the extension)
+Chart::pie(['Chrome' => 63, 'Firefox' => 19, 'Safari' => 18])
+    ->title('Browser share')
+    ->save('browser-share.png');
+
+// 2) A combo chart: bars + a line on an independently-scaled right axis, as SVG
+Chart::combo()
+    ->addBar('Revenue', [120, 190, 70, 220])
+    ->addLine('Conversion %', [3.2, 4.1, 2.8, 5.0], Axis::Right)
+    ->title('Revenue vs conversion')
+    ->categories(['Q1', 'Q2', 'Q3', 'Q4'])
+    ->save('combo.svg');
+
+// 3) A multi-series line as a self-contained PNG <img> for an HTML email
+$img = Chart::line([Series::fromValues('2024', [10, 14, 9, 18])])
+    ->addSeries(Series::fromValues('2025', [13, 11, 17, 21]))
+    ->categories(['Q1', 'Q2', 'Q3', 'Q4'])
+    ->title('Signups')
+    ->toEmailImg(['alt' => 'Signups', 'width' => 480]);
+
+file_put_contents('report.html', "<h1>Monthly report</h1>{$img}");
+
+echo "Wrote browser-share.png, combo.svg and report.html\n";
+```
+
+## Using it in Laravel
+
+**Serve a chart as an image response:**
+
+```php
+use HBVSoft\ChartHandler\Chart;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/charts/weekly.png', function () {
+    $png = Chart::bar(['Mon' => 8, 'Tue' => 12, 'Wed' => 5, 'Thu' => 14, 'Fri' => 9])
+        ->title('This week')
+        ->toPng();
+
+    return response($png)->header('Content-Type', 'image/png');
+});
+```
+
+**Embed one inline in a Blade view** (no external request — great for PDFs/print):
+
+```php
+// in the controller
+$chart = Chart::pie(['A' => 40, 'B' => 35, 'C' => 25])->title('Split');
+return view('dashboard', ['chartUri' => $chart->toDataUri()]);
+```
+
+```blade
+{{-- resources/views/dashboard.blade.php --}}
+<img src="{{ $chartUri }}" alt="Split">
+```
+
+**Inline charts in a Mailable** (renders offline, including in Outlook):
+
+```php
+use HBVSoft\ChartHandler\Chart;
+use HBVSoft\ChartHandler\Spec\Series;
+
+$img = Chart::line([Series::fromValues('Signups', [10, 18, 24, 30])])
+    ->categories(['Jan', 'Feb', 'Mar', 'Apr'])
+    ->toEmailImg(['alt' => 'Signups']);
+
+Mail::html("<h1>Monthly report</h1>{$img}", function ($m) {
+    $m->to('user@example.com')->subject('Your report');
+});
+```
+
 ## Lower-level API
 
 The facade is sugar over a small pipeline you can use directly:
