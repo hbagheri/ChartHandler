@@ -90,6 +90,30 @@ class ComboTest extends TestCase
         self::assertStringStartsWith("\x89PNG", $png);
     }
 
+    public function test_combo_supports_multiple_grouped_bar_series_plus_a_line(): void
+    {
+        $chart = Chart::combo()
+            ->addBar('EU', [20, 24, 28, 30])
+            ->addBar('US', [26, 22, 31, 29])    // second bar series → grouped bars, same axes
+            ->addLine('Growth %', [3.2, 4.1, 3.8, 5.0], Axis::Right)
+            ->categories(['Q1', 'Q2', 'Q3', 'Q4']);
+
+        $spec = $chart->toSpec();
+        self::assertCount(3, $spec->series);
+        self::assertSame(SeriesType::Bar, $spec->series[0]->type);
+        self::assertSame(SeriesType::Bar, $spec->series[1]->type);
+        self::assertSame(SeriesType::Line, $spec->series[2]->type);
+        // both bar series sit on the left axis (shared X and Y)
+        self::assertSame(Axis::Left, $spec->series[0]->axis);
+        self::assertSame(Axis::Left, $spec->series[1]->axis);
+
+        $svg = $chart->toSvg();
+        // 2 bar series × 4 categories = 8 bars (+ background + legend swatches)
+        self::assertGreaterThanOrEqual(8, substr_count($svg, '<rect'));
+        self::assertSame(1, substr_count($svg, '<polyline'));            // the line
+        self::assertGreaterThanOrEqual(5, substr_count($svg, 'text-anchor="start"')); // right axis
+    }
+
     public function test_same_combo_renders_to_svg_and_png_by_changing_one_arg(): void
     {
         $chart = $this->comboChart();
