@@ -52,7 +52,7 @@ only know how to render a `ChartSpec` into a chosen `Format`. This decouples the
 
 ---
 
-## Phase 0 — Stabilize (make it load & build)  · _blocking_
+## Phase 0 — Stabilize (make it load & build)  · ✅ DONE
 
 The project currently has fatal parse/autoload errors and cannot run.
 
@@ -69,7 +69,12 @@ The project currently has fatal parse/autoload errors and cannot run.
 
 **Done when:** `composer install` succeeds, `php -l` is clean on all files, smoke test passes.
 
-## Phase 1 — Architecture & contracts (design spike)
+## Phase 1 — Architecture & contracts (design spike)  · ✅ DONE
+
+PHP floor raised to 8.1 (native enums). Delivered: `Output\Format`, `Output\RenderedChart`
+(binary/base64/data-URI/`<img>`/save), `Spec\{ChartType,DataPoint,Series,ChartSpec,Theme,
+LegendPosition}` with validation, `Rendering\{RendererInterface,AbstractRenderer}`, and a
+typed `Exception\*` hierarchy. No real backend yet — that is Phase 2.
 
 Lock the core abstractions before building features.
 
