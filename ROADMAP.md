@@ -75,8 +75,10 @@ raster→`GdRenderer`).
   mixed series with an independently-scaled secondary axis, on both backends.
 - **Stacked bar (v1.3.0).** `Chart::stackedBar([...])` — series stacked per category, value
   axis scaled to the column totals, on both backends.
+- **Scatter (v1.4.0).** `Chart::scatter([[x, y], ...])` — numeric (x, y) points on independent
+  numeric axes, multiple series, on both backends. Completes the planned chart-type set.
 
-_Current: 64 tests / 186 assertions green, PHPStan level 6 clean._
+_Current: 68 tests / 201 assertions green, PHPStan level 6 clean._
 
 ---
 
@@ -143,9 +145,10 @@ expanding chart types.
 ## Phase 6 — Post-1.0: remaining chart types
 
 - **Stacked bar** — ✅ done (v1.3.0), both backends.
-- **Scatter** — remaining.
+- **Scatter** — ✅ done (v1.4.0), both backends.
 
-Future types follow the same "add a new chart type" recipe across both backends.
+All originally-planned chart types are now shipped. Future types follow the same
+"add a new chart type" recipe across both backends.
 
 ---
 

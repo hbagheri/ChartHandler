@@ -46,6 +46,7 @@ final class GdRenderer extends AbstractRenderer
             ChartType::Line,
             ChartType::Area,
             ChartType::Combo,
+            ChartType::Scatter,
         ];
     }
 
@@ -65,7 +66,7 @@ final class GdRenderer extends AbstractRenderer
             ChartType::Line => $this->drawLines($img, $spec, false),
             ChartType::Area => $this->drawLines($img, $spec, true),
             ChartType::Combo => $this->drawCombo($img, $spec),
-            default => null, // unreachable: guarded by AbstractRenderer::render()
+            ChartType::Scatter => $this->drawScatter($img, $spec),
         };
 
         if ($spec->title !== '') {
@@ -459,6 +460,65 @@ final class GdRenderer extends AbstractRenderer
         if ($right !== null) {
             imageline($img, (int) round($plot['x'] + $plot['w']), (int) round($plot['y']), (int) round($plot['x'] + $plot['w']), (int) round($baseline), $axis);
         }
+    }
+
+    // --- Scatter (numeric x / y) ------------------------------------------------
+
+    private function drawScatter(GdImage $img, ChartSpec $spec): void
+    {
+        $xScale = new LinearScale($this->scatterMaxX($spec));
+        $yScale = new LinearScale(PlotData::maxValue($spec));
+        $plot = $this->beginPlot($spec);
+        $this->drawScatterAxes($img, $plot, $xScale, $yScale);
+
+        $baseline = $plot['y'] + $plot['h'];
+        foreach ($spec->series as $si => $series) {
+            $color = $this->color($img, $series->color ?? $spec->theme->colorAt($si));
+            foreach ($series->points as $idx => $point) {
+                $x = $point->x ?? (float) $idx;
+                $px = (int) round($plot['x'] + $xScale->lengthOf($x, $plot['w']));
+                $py = (int) round($baseline - $yScale->lengthOf(max(0.0, $point->value), $plot['h']));
+                imagefilledellipse($img, $px, $py, 7, 7, $color);
+            }
+        }
+
+        $this->maybeSeriesLegend($img, $spec, $plot);
+    }
+
+    /**
+     * @param array{x: float, y: float, w: float, h: float} $plot
+     */
+    private function drawScatterAxes(GdImage $img, array $plot, LinearScale $xScale, LinearScale $yScale): void
+    {
+        $baseline = $plot['y'] + $plot['h'];
+        $grid = $this->color($img, '#e5e5e5');
+        $axis = $this->color($img, '#999999');
+        $label = $this->color($img, '#666666');
+
+        for ($i = 0; $i <= 4; $i++) {
+            $fraction = $i / 4;
+            $y = $baseline - $fraction * $plot['h'];
+            imageline($img, (int) round($plot['x']), (int) round($y), (int) round($plot['x'] + $plot['w']), (int) round($y), $grid);
+            $this->text($img, 2, $plot['x'] - 6.0, $y, $this->num($yScale->max * $fraction), $label, 'right', 'middle');
+
+            $x = $plot['x'] + $fraction * $plot['w'];
+            $this->text($img, 2, $x, $baseline + 6.0, $this->num($xScale->max * $fraction), $label, 'center');
+        }
+
+        imageline($img, (int) round($plot['x']), (int) round($plot['y']), (int) round($plot['x']), (int) round($baseline), $axis);
+        imageline($img, (int) round($plot['x']), (int) round($baseline), (int) round($plot['x'] + $plot['w']), (int) round($baseline), $axis);
+    }
+
+    private function scatterMaxX(ChartSpec $spec): float
+    {
+        $max = 0.0;
+        foreach ($spec->series as $series) {
+            foreach ($series->points as $idx => $point) {
+                $max = max($max, $point->x ?? (float) $idx);
+            }
+        }
+
+        return $max;
     }
 
     // --- Shared plumbing --------------------------------------------------------

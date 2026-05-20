@@ -115,6 +115,31 @@ final class Chart
         return new self(ChartType::StackedBar, self::normalize($data, 'Series'));
     }
 
+    /**
+     * A scatter chart from numeric (x, y) pairs:
+     *   Chart::scatter([[1, 5], [2, 9], [4, 3]])->addPoints('B', [[1, 2], [3, 6]]);
+     *
+     * @param Series|list<array{0: int|float, 1: int|float}> $points
+     */
+    public static function scatter(Series|array $points, string $name = 'Points'): self
+    {
+        $series = $points instanceof Series ? $points : Series::fromPoints($name, $points);
+
+        return new self(ChartType::Scatter, [$series]);
+    }
+
+    /**
+     * Add another scatter series of (x, y) pairs.
+     *
+     * @param list<array{0: int|float, 1: int|float}> $points
+     */
+    public function addPoints(string $name, array $points): self
+    {
+        $this->series[] = Series::fromPoints($name, $points);
+
+        return $this;
+    }
+
     // --- Fluent configuration ---------------------------------------------------
 
     public function title(string $title): self

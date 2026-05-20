@@ -2,7 +2,7 @@
 
 namespace HBVSoft\ChartHandler\Tests\Rendering;
 
-use HBVSoft\ChartHandler\Exception\UnsupportedChartTypeException;
+use HBVSoft\ChartHandler\Exception\UnsupportedFormatException;
 use HBVSoft\ChartHandler\Output\Format;
 use HBVSoft\ChartHandler\Rendering\SvgRenderer;
 use HBVSoft\ChartHandler\Spec\ChartSpec;
@@ -99,12 +99,13 @@ class SvgRendererTest extends TestCase
         self::assertStringContainsString('fill-opacity="0.2"', $svg);
     }
 
-    public function test_unsupported_type_is_rejected(): void
+    public function test_unsupported_format_is_rejected(): void
     {
-        $spec = new ChartSpec(ChartType::Scatter, [Series::fromValues('S', [1, 2])]);
+        // SvgRenderer only emits SVG; asking for a raster format must be rejected.
+        $spec = new ChartSpec(ChartType::Pie, [Series::fromValues('S', [1, 2])]);
 
-        $this->expectException(UnsupportedChartTypeException::class);
-        $this->renderer->render($spec, Format::Svg);
+        $this->expectException(UnsupportedFormatException::class);
+        $this->renderer->render($spec, Format::Png);
     }
 
     public function test_malicious_label_is_escaped(): void

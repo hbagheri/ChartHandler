@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-05-20
+
+### Added
+- **Scatter charts** (`ChartType::Scatter`, `Chart::scatter([[x, y], ...])`): plots numeric
+  (x, y) points with independent numeric x and y axes; add more series with `addPoints()`.
+  Adds `Series::fromPoints()` and an optional `DataPoint::$x`. Rendered by both backends.
+
 ## [1.3.0] - 2026-05-20
 
 ### Added
@@ -43,7 +50,8 @@ skeleton and predates this rewrite.)
 - Typed exceptions under the `ChartHandlerException` marker interface.
 - README, examples, and CI (PHPStan level 6 + PHPUnit on PHP 8.1–8.3).
 
-[Unreleased]: https://github.com/hbagheri/ChartHandler/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/hbagheri/ChartHandler/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/hbagheri/ChartHandler/releases/tag/v1.4.0
 [1.3.0]: https://github.com/hbagheri/ChartHandler/releases/tag/v1.3.0
 [1.2.0]: https://github.com/hbagheri/ChartHandler/releases/tag/v1.2.0
 [1.1.0]: https://github.com/hbagheri/ChartHandler/releases/tag/v1.1.0

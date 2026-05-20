@@ -33,6 +33,7 @@ final class SvgRenderer extends AbstractRenderer
             ChartType::Line,
             ChartType::Area,
             ChartType::Combo,
+            ChartType::Scatter,
         ];
     }
 
@@ -49,7 +50,7 @@ final class SvgRenderer extends AbstractRenderer
             ChartType::Line => $this->drawLines($canvas, $spec, false),
             ChartType::Area => $this->drawLines($canvas, $spec, true),
             ChartType::Combo => $this->drawCombo($canvas, $spec),
-            default => null, // unreachable: guarded by AbstractRenderer::render()
+            ChartType::Scatter => $this->drawScatter($canvas, $spec),
         };
 
         if ($spec->title !== '') {
@@ -426,6 +427,66 @@ final class SvgRenderer extends AbstractRenderer
         if ($right !== null) {
             $canvas->line($plot['x'] + $plot['w'], $plot['y'], $plot['x'] + $plot['w'], $baseline, '#999999');
         }
+    }
+
+    // --- Scatter (numeric x / y) ------------------------------------------------
+
+    private function drawScatter(SvgCanvas $canvas, ChartSpec $spec): void
+    {
+        $xScale = new LinearScale($this->scatterMaxX($spec));
+        $yScale = new LinearScale(PlotData::maxValue($spec));
+        $plot = $this->beginPlot($canvas, $spec);
+        $this->drawScatterAxes($canvas, $plot, $xScale, $yScale);
+
+        $baseline = $plot['y'] + $plot['h'];
+        foreach ($spec->series as $si => $series) {
+            $hex = $series->color ?? $spec->theme->colorAt($si);
+            foreach ($series->points as $idx => $point) {
+                $x = $point->x ?? (float) $idx;
+                $px = $plot['x'] + $xScale->lengthOf($x, $plot['w']);
+                $py = $baseline - $yScale->lengthOf(max(0.0, $point->value), $plot['h']);
+                $canvas->circle($px, $py, 4.0, $hex);
+            }
+        }
+
+        $this->maybeDrawSeriesLegend($canvas, $spec, $plot);
+    }
+
+    /**
+     * @param array{x: float, y: float, w: float, h: float} $plot
+     */
+    private function drawScatterAxes(SvgCanvas $canvas, array $plot, LinearScale $xScale, LinearScale $yScale): void
+    {
+        $baseline = $plot['y'] + $plot['h'];
+
+        for ($i = 0; $i <= 4; $i++) {
+            $fraction = $i / 4;
+            $y = $baseline - $fraction * $plot['h'];
+            $canvas->line($plot['x'], $y, $plot['x'] + $plot['w'], $y, '#e5e5e5');
+            $canvas->text($plot['x'] - 6.0, $y + 4.0, SvgCanvas::num($yScale->max * $fraction), [
+                'font-size' => '11', 'fill' => '#666', 'text-anchor' => 'end',
+            ]);
+
+            $x = $plot['x'] + $fraction * $plot['w'];
+            $canvas->text($x, $baseline + 16.0, SvgCanvas::num($xScale->max * $fraction), [
+                'font-size' => '11', 'fill' => '#666', 'text-anchor' => 'middle',
+            ]);
+        }
+
+        $canvas->line($plot['x'], $plot['y'], $plot['x'], $baseline, '#999999');
+        $canvas->line($plot['x'], $baseline, $plot['x'] + $plot['w'], $baseline, '#999999');
+    }
+
+    private function scatterMaxX(ChartSpec $spec): float
+    {
+        $max = 0.0;
+        foreach ($spec->series as $series) {
+            foreach ($series->points as $idx => $point) {
+                $max = max($max, $point->x ?? (float) $idx);
+            }
+        }
+
+        return $max;
     }
 
     // --- Shared plumbing --------------------------------------------------------

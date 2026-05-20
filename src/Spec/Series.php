@@ -58,6 +58,26 @@ final class Series
     }
 
     /**
+     * Build a series of (x, y) points for a scatter chart:
+     *   Series::fromPoints('A', [[1, 5], [2, 9], [4, 3]]);
+     *
+     * @param list<array{0: int|float, 1: int|float}> $points
+     */
+    public static function fromPoints(string $name, array $points, ?string $color = null): self
+    {
+        if ($points === []) {
+            throw InvalidChartDataException::emptyPoints($name);
+        }
+
+        $dataPoints = [];
+        foreach ($points as $pair) {
+            $dataPoints[] = new DataPoint(value: (float) $pair[1], x: (float) $pair[0]);
+        }
+
+        return new self($name, $dataPoints, $color);
+    }
+
+    /**
      * @return list<float>
      */
     public function values(): array

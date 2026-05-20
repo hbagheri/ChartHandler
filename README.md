@@ -17,7 +17,7 @@ echo Chart::pie(['Chrome' => 63, 'Firefox' => 19, 'Safari' => 18])
 
 ## Features
 
-- **Chart types:** pie, donut, bar, stacked bar, line, area, and **combo** (mixed bars + line/area with a secondary axis).
+- **Chart types:** pie, donut, bar, stacked bar, line, area, scatter, and **combo** (mixed bars + line/area with a secondary axis).
 - **Two backends, zero external chart libraries:**
   - `SvgRenderer` — pure PHP, crisp and scalable (great for the web).
   - `GdRenderer` — PNG / JPEG / GIF / WebP via PHP's standard `gd` extension.
@@ -68,6 +68,11 @@ Chart::stackedBar([
     Series::fromValues('Direct', [12, 19, 15]),
     Series::fromValues('Organic', [20, 24, 28]),
 ])->categories(['Jan', 'Feb', 'Mar'])->toPng();
+
+// Scatter from numeric (x, y) pairs
+Chart::scatter([[1, 5], [2, 9], [4, 3], [6, 7]])
+    ->addPoints('Series B', [[1, 2], [3, 6], [5, 4]])
+    ->toSvg();
 ```
 
 ## Combo charts (dual axis)

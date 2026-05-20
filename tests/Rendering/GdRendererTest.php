@@ -2,7 +2,6 @@
 
 namespace HBVSoft\ChartHandler\Tests\Rendering;
 
-use HBVSoft\ChartHandler\Exception\UnsupportedChartTypeException;
 use HBVSoft\ChartHandler\Exception\UnsupportedFormatException;
 use HBVSoft\ChartHandler\Output\Format;
 use HBVSoft\ChartHandler\Rendering\GdRenderer;
@@ -107,10 +106,4 @@ class GdRendererTest extends TestCase
         $this->renderer->render($this->pie(), Format::Svg);
     }
 
-    public function test_unsupported_type_is_rejected(): void
-    {
-        $spec = new ChartSpec(ChartType::Scatter, [Series::fromValues('S', [1, 2])]);
-        $this->expectException(UnsupportedChartTypeException::class);
-        $this->renderer->render($spec, Format::Png);
-    }
 }
