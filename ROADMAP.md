@@ -66,12 +66,15 @@ raster→`GdRenderer`).
   `Rendering\{RendererInterface,AbstractRenderer}`, typed `Exception\*`.
 - **SVG backend.** `Rendering\SvgRenderer` for **pie, donut, bar, line, area** — legend,
   axis scaling, escaped labels. Proven end-to-end as inline data-URI `<img>` in the playground.
+- **GD raster backend (Phase 2).** `Rendering\GdRenderer` → PNG/JPEG/GIF/WebP for the same 5
+  types; shared `Rendering\PlotData` keeps both backends consistent. Proven in the playground
+  (`GET /charts`) rendering PNG + SVG side by side as inline data-URIs.
 
-_Current: 33 tests / 88 assertions green, PHPStan level 6 clean, on branch `roadmap-rework`._
+_Current: 43 tests / 115 assertions green, PHPStan level 6 clean, on branch `roadmap-rework`._
 
 ---
 
-## Phase 2 — GD raster backend (PNG/JPEG/GIF/WebP)  · NEXT
+## Phase 2 — GD raster backend (PNG/JPEG/GIF/WebP)  · ✅ DONE
 
 Replaces the old jpgraph plan. A `Rendering\GdRenderer` using the standard `gd` extension —
 no external chart library, no fork. **Priority, because PNG is what makes the email use case

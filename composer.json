@@ -3,7 +3,7 @@
     "description": "Extensible PHP charting library with pluggable rendering backends and multiple output formats (PNG/JPEG/SVG, base64/data-URI).",
     "type": "library",
     "license": "MIT",
-    "keywords": ["chart", "graph", "jpgraph", "svg", "png", "base64"],
+    "keywords": ["chart", "graph", "svg", "png", "gd", "base64", "email"],
     "require": {
         "php": ">=8.1"
     },
@@ -12,7 +12,7 @@
         "phpstan/phpstan": "^1.11"
     },
     "suggest": {
-        "hbvsoft/jpgraph": "Required for the jpgraph raster (PNG/JPEG) rendering backend; needs the GD extension. Added in Phase 2."
+        "ext-gd": "Required for the GdRenderer (PNG/JPEG/GIF/WebP raster output). SVG output needs no extensions."
     },
     "autoload": {
         "psr-4": {

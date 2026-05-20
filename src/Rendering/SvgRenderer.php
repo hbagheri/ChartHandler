@@ -135,13 +135,13 @@ final class SvgRenderer extends AbstractRenderer
     private function drawBars(SvgCanvas $canvas, ChartSpec $spec): void
     {
         $plot = $this->beginPlot($canvas, $spec);
-        $categories = $this->categories($spec);
+        $categories = PlotData::categories($spec);
         $count = count($categories);
         if ($count === 0) {
             return;
         }
 
-        $scale = new LinearScale($this->maxValue($spec));
+        $scale = new LinearScale(PlotData::maxValue($spec));
         $this->drawAxes($canvas, $plot, $scale);
 
         $seriesCount = max(1, count($spec->series));
@@ -171,13 +171,13 @@ final class SvgRenderer extends AbstractRenderer
     private function drawLines(SvgCanvas $canvas, ChartSpec $spec, bool $area): void
     {
         $plot = $this->beginPlot($canvas, $spec);
-        $categories = $this->categories($spec);
+        $categories = PlotData::categories($spec);
         $count = count($categories);
         if ($count === 0) {
             return;
         }
 
-        $scale = new LinearScale($this->maxValue($spec));
+        $scale = new LinearScale(PlotData::maxValue($spec));
         $this->drawAxes($canvas, $plot, $scale);
 
         $groupWidth = $plot['w'] / $count;
@@ -325,32 +325,4 @@ final class SvgRenderer extends AbstractRenderer
         }
     }
 
-    /**
-     * @return list<string>
-     */
-    private function categories(ChartSpec $spec): array
-    {
-        if ($spec->categories !== []) {
-            return $spec->categories;
-        }
-
-        $labels = [];
-        foreach ($spec->series[0]->points as $i => $point) {
-            $labels[] = $point->label ?? (string) ($i + 1);
-        }
-
-        return $labels;
-    }
-
-    private function maxValue(ChartSpec $spec): float
-    {
-        $max = 0.0;
-        foreach ($spec->series as $series) {
-            foreach ($series->points as $point) {
-                $max = max($max, $point->value);
-            }
-        }
-
-        return $max;
-    }
 }
