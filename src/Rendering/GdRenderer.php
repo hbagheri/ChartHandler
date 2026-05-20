@@ -42,6 +42,7 @@ final class GdRenderer extends AbstractRenderer
             ChartType::Pie,
             ChartType::Donut,
             ChartType::Bar,
+            ChartType::StackedBar,
             ChartType::Line,
             ChartType::Area,
             ChartType::Combo,
@@ -60,6 +61,7 @@ final class GdRenderer extends AbstractRenderer
             ChartType::Pie => $this->drawPie($img, $spec, false),
             ChartType::Donut => $this->drawPie($img, $spec, true),
             ChartType::Bar => $this->drawBars($img, $spec),
+            ChartType::StackedBar => $this->drawStackedBar($img, $spec),
             ChartType::Line => $this->drawLines($img, $spec, false),
             ChartType::Area => $this->drawLines($img, $spec, true),
             ChartType::Combo => $this->drawCombo($img, $spec),
@@ -259,6 +261,64 @@ final class GdRenderer extends AbstractRenderer
 
         $this->drawCategoryLabels($img, $categories, $plot, $groupWidth);
         $this->maybeSeriesLegend($img, $spec, $plot);
+    }
+
+    // --- Axis: stacked bars -----------------------------------------------------
+
+    private function drawStackedBar(GdImage $img, ChartSpec $spec): void
+    {
+        $categories = PlotData::categories($spec);
+        $count = count($categories);
+        if ($count === 0) {
+            return;
+        }
+
+        $scale = new LinearScale($this->stackedMax($spec, $count));
+        $plot = $this->beginPlot($spec);
+        $this->drawAxes($img, $plot, $scale);
+
+        $baseline = $plot['y'] + $plot['h'];
+        $groupWidth = $plot['w'] / $count;
+        $barWidth = $groupWidth * 0.6;
+
+        for ($ci = 0; $ci < $count; $ci++) {
+            $cumulative = 0.0;
+            $bx = $plot['x'] + $ci * $groupWidth + ($groupWidth - $barWidth) / 2;
+            foreach ($spec->series as $si => $series) {
+                if ($ci >= $series->count()) {
+                    continue;
+                }
+                $value = max(0.0, $series->points[$ci]->value);
+                $yBottom = (int) round($baseline - $scale->lengthOf($cumulative, $plot['h']));
+                $yTop = (int) round($baseline - $scale->lengthOf($cumulative + $value, $plot['h']));
+                if ($yBottom > $yTop) {
+                    imagefilledrectangle($img, (int) round($bx), $yTop, (int) round($bx + $barWidth), $yBottom, $this->color($img, $series->color ?? $spec->theme->colorAt($si)));
+                }
+                $cumulative += $value;
+            }
+        }
+
+        $this->drawCategoryLabels($img, $categories, $plot, $groupWidth);
+        $this->maybeSeriesLegend($img, $spec, $plot);
+    }
+
+    /**
+     * Largest stacked total across categories (the value-axis ceiling for a stacked bar).
+     */
+    private function stackedMax(ChartSpec $spec, int $count): float
+    {
+        $max = 0.0;
+        for ($ci = 0; $ci < $count; $ci++) {
+            $sum = 0.0;
+            foreach ($spec->series as $series) {
+                if ($ci < $series->count()) {
+                    $sum += max(0.0, $series->points[$ci]->value);
+                }
+            }
+            $max = max($max, $sum);
+        }
+
+        return $max;
     }
 
     // --- Combo: mixed series with an optional secondary axis --------------------

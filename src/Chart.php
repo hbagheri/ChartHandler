@@ -104,6 +104,17 @@ final class Chart
         return new self(ChartType::Combo, []);
     }
 
+    /**
+     * A stacked bar chart: series are stacked on top of each other per category.
+     * Pass a list of Series (or add them with addSeries()).
+     *
+     * @param Series|array<array-key, int|float|Series> $data
+     */
+    public static function stackedBar(Series|array $data): self
+    {
+        return new self(ChartType::StackedBar, self::normalize($data, 'Series'));
+    }
+
     // --- Fluent configuration ---------------------------------------------------
 
     public function title(string $title): self

@@ -73,8 +73,10 @@ raster→`GdRenderer`).
 - **Released v1.1.0 / v1.2.0.** Docs, examples, LICENSE, CHANGELOG, CI (PHP 8.1–8.3) shipped.
 - **Combo + dual-axis (v1.2.0).** `Chart::combo()->addBar()/addLine()/addArea(..., Axis::Right)` —
   mixed series with an independently-scaled secondary axis, on both backends.
+- **Stacked bar (v1.3.0).** `Chart::stackedBar([...])` — series stacked per category, value
+  axis scaled to the column totals, on both backends.
 
-_Current: 58 tests / 159 assertions green, PHPStan level 6 clean._
+_Current: 64 tests / 186 assertions green, PHPStan level 6 clean._
 
 ---
 
@@ -140,8 +142,10 @@ expanding chart types.
 
 ## Phase 6 — Post-1.0: remaining chart types
 
-Add **stacked bar** and **scatter** (and any future types) across both backends, following
-the documented "add a new chart type" recipe. Release as 1.x.
+- **Stacked bar** — ✅ done (v1.3.0), both backends.
+- **Scatter** — remaining.
+
+Future types follow the same "add a new chart type" recipe across both backends.
 
 ---
 
