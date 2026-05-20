@@ -6,8 +6,10 @@ use HBVSoft\ChartHandler\Output\Format;
 use HBVSoft\ChartHandler\Output\RenderedChart;
 use HBVSoft\ChartHandler\Rendering\Svg\LinearScale;
 use HBVSoft\ChartHandler\Rendering\Svg\SvgCanvas;
+use HBVSoft\ChartHandler\Spec\Axis;
 use HBVSoft\ChartHandler\Spec\ChartSpec;
 use HBVSoft\ChartHandler\Spec\ChartType;
+use HBVSoft\ChartHandler\Spec\SeriesType;
 
 /**
  * Pure-PHP backend that renders a ChartSpec to SVG markup — no GD, no external
@@ -29,6 +31,7 @@ final class SvgRenderer extends AbstractRenderer
             ChartType::Bar,
             ChartType::Line,
             ChartType::Area,
+            ChartType::Combo,
         ];
     }
 
@@ -43,6 +46,7 @@ final class SvgRenderer extends AbstractRenderer
             ChartType::Bar => $this->drawBars($canvas, $spec),
             ChartType::Line => $this->drawLines($canvas, $spec, false),
             ChartType::Area => $this->drawLines($canvas, $spec, true),
+            ChartType::Combo => $this->drawCombo($canvas, $spec),
             default => null, // unreachable: guarded by AbstractRenderer::render()
         };
 
@@ -232,12 +236,145 @@ final class SvgRenderer extends AbstractRenderer
         $this->maybeDrawSeriesLegend($canvas, $spec, $plot);
     }
 
+    // --- Combo: mixed series with an optional secondary axis --------------------
+
+    private function drawCombo(SvgCanvas $canvas, ChartSpec $spec): void
+    {
+        $categories = PlotData::categories($spec);
+        $count = count($categories);
+        if ($count === 0) {
+            return;
+        }
+
+        [$leftScale, $rightScale] = $this->comboScales($spec);
+        $plot = $this->beginPlot($canvas, $spec, $rightScale !== null);
+        $this->drawComboAxes($canvas, $plot, $leftScale, $rightScale);
+
+        $baseline = $plot['y'] + $plot['h'];
+        $groupWidth = $plot['w'] / $count;
+
+        $barCount = 0;
+        foreach ($spec->series as $series) {
+            if (($series->type ?? SeriesType::Line) === SeriesType::Bar) {
+                $barCount++;
+            }
+        }
+        $bandWidth = $groupWidth * 0.8;
+        $barWidth = $bandWidth / max(1, $barCount);
+
+        $barSlot = 0;
+        foreach ($spec->series as $si => $series) {
+            $type = $series->type ?? SeriesType::Line;
+            $scale = ($series->axis === Axis::Right && $rightScale !== null) ? $rightScale : $leftScale;
+            $hex = $series->color ?? $spec->theme->colorAt($si);
+
+            if ($type === SeriesType::Bar) {
+                foreach ($series->points as $ci => $point) {
+                    if ($ci >= $count) {
+                        break;
+                    }
+                    $height = $scale->lengthOf(max(0.0, $point->value), $plot['h']);
+                    $bx = $plot['x'] + $ci * $groupWidth + ($groupWidth - $bandWidth) / 2 + $barSlot * $barWidth;
+                    $canvas->rect($bx, $baseline - $height, max(0.0, $barWidth - 1.0), $height, $hex);
+                }
+                $barSlot++;
+
+                continue;
+            }
+
+            /** @var list<array{x: float, y: float}> $pts */
+            $pts = [];
+            foreach ($series->points as $ci => $point) {
+                if ($ci >= $count) {
+                    break;
+                }
+                $pts[] = [
+                    'x' => $plot['x'] + $ci * $groupWidth + $groupWidth / 2,
+                    'y' => $baseline - $scale->lengthOf(max(0.0, $point->value), $plot['h']),
+                ];
+            }
+            if ($pts === []) {
+                continue;
+            }
+
+            $polyline = implode(' ', array_map(
+                static fn (array $p): string => SvgCanvas::num($p['x']) . ',' . SvgCanvas::num($p['y']),
+                $pts,
+            ));
+
+            if ($type === SeriesType::Area) {
+                $polygon = SvgCanvas::num($pts[0]['x']) . ',' . SvgCanvas::num($baseline) . ' '
+                    . $polyline . ' '
+                    . SvgCanvas::num($pts[count($pts) - 1]['x']) . ',' . SvgCanvas::num($baseline);
+                $canvas->add(sprintf('<polygon points="%s" fill="%s" fill-opacity="0.2" stroke="none" />', $polygon, SvgCanvas::esc($hex)));
+            }
+
+            $canvas->add(sprintf('<polyline points="%s" fill="none" stroke="%s" stroke-width="2" />', $polyline, SvgCanvas::esc($hex)));
+            foreach ($pts as $p) {
+                $canvas->circle($p['x'], $p['y'], 3.0, $hex);
+            }
+        }
+
+        $this->drawCategoryLabels($canvas, $categories, $plot, $groupWidth);
+        $this->maybeDrawSeriesLegend($canvas, $spec, $plot);
+    }
+
+    /**
+     * @return array{0: LinearScale, 1: LinearScale|null}
+     */
+    private function comboScales(ChartSpec $spec): array
+    {
+        $leftMax = 0.0;
+        $rightMax = 0.0;
+        $hasRight = false;
+        foreach ($spec->series as $series) {
+            foreach ($series->points as $point) {
+                if ($series->axis === Axis::Right) {
+                    $rightMax = max($rightMax, $point->value);
+                    $hasRight = true;
+                } else {
+                    $leftMax = max($leftMax, $point->value);
+                }
+            }
+        }
+
+        return [new LinearScale($leftMax), $hasRight ? new LinearScale($rightMax) : null];
+    }
+
+    /**
+     * @param array{x: float, y: float, w: float, h: float} $plot
+     */
+    private function drawComboAxes(SvgCanvas $canvas, array $plot, LinearScale $left, ?LinearScale $right): void
+    {
+        $baseline = $plot['y'] + $plot['h'];
+
+        for ($i = 0; $i <= 4; $i++) {
+            $fraction = $i / 4;
+            $y = $baseline - $fraction * $plot['h'];
+            $canvas->line($plot['x'], $y, $plot['x'] + $plot['w'], $y, '#e5e5e5');
+            $canvas->text($plot['x'] - 6.0, $y + 4.0, SvgCanvas::num($left->max * $fraction), [
+                'font-size' => '11', 'fill' => '#666', 'text-anchor' => 'end',
+            ]);
+            if ($right !== null) {
+                $canvas->text($plot['x'] + $plot['w'] + 6.0, $y + 4.0, SvgCanvas::num($right->max * $fraction), [
+                    'font-size' => '11', 'fill' => '#666', 'text-anchor' => 'start',
+                ]);
+            }
+        }
+
+        $canvas->line($plot['x'], $plot['y'], $plot['x'], $baseline, '#999999');
+        $canvas->line($plot['x'], $baseline, $plot['x'] + $plot['w'], $baseline, '#999999');
+        if ($right !== null) {
+            $canvas->line($plot['x'] + $plot['w'], $plot['y'], $plot['x'] + $plot['w'], $baseline, '#999999');
+        }
+    }
+
     // --- Shared plumbing --------------------------------------------------------
 
     /**
      * @return array{x: float, y: float, w: float, h: float}
      */
-    private function beginPlot(SvgCanvas $canvas, ChartSpec $spec): array
+    private function beginPlot(SvgCanvas $canvas, ChartSpec $spec, bool $secondaryAxis = false): array
     {
         $theme = $spec->theme;
         $top = $spec->title !== '' ? 30.0 : 12.0;
@@ -246,7 +383,7 @@ final class SvgRenderer extends AbstractRenderer
         }
 
         $marginLeft = 48.0;
-        $marginRight = 16.0;
+        $marginRight = $secondaryAxis ? 52.0 : 16.0;
         $marginBottom = 42.0;
 
         return [

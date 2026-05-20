@@ -6,6 +6,17 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-05-20
+
+### Added
+- **Combo charts with a secondary (right) Y-axis.** Mix bar/line/area series in a single
+  chart, each bound to the left or right axis with independent auto-scaling:
+  - new `Spec\Axis` (Left/Right) and `Spec\SeriesType` (Bar/Line/Area) enums,
+  - `ChartType::Combo`, and `Series::withType()` / `withAxis()`,
+  - facade `Chart::combo()->addBar()/addLine()/addArea($name, $data, Axis::Right)`.
+  Rendered by both the SVG and GD backends (right axis scaled independently — no manual
+  value scaling needed).
+
 ## [1.1.0] - 2026-05-20
 
 First functional release. (The earlier `1.0.0` tag pointed at an initial non-working
@@ -25,5 +36,6 @@ skeleton and predates this rewrite.)
 - Typed exceptions under the `ChartHandlerException` marker interface.
 - README, examples, and CI (PHPStan level 6 + PHPUnit on PHP 8.1–8.3).
 
-[Unreleased]: https://github.com/hbagheri/ChartHandler/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/hbagheri/ChartHandler/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/hbagheri/ChartHandler/releases/tag/v1.2.0
 [1.1.0]: https://github.com/hbagheri/ChartHandler/releases/tag/v1.1.0

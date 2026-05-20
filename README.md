@@ -17,7 +17,7 @@ echo Chart::pie(['Chrome' => 63, 'Firefox' => 19, 'Safari' => 18])
 
 ## Features
 
-- **Chart types:** pie, donut, bar, line, area.
+- **Chart types:** pie, donut, bar, line, area, and **combo** (mixed bars + line/area with a secondary axis).
 - **Two backends, zero external chart libraries:**
   - `SvgRenderer` — pure PHP, crisp and scalable (great for the web).
   - `GdRenderer` — PNG / JPEG / GIF / WebP via PHP's standard `gd` extension.
@@ -63,6 +63,26 @@ Chart::line([Series::fromValues('2024', [10, 14, 9, 18])])
 // Donut as an SVG string
 $svg = Chart::donut(['Linux' => 45, 'Windows' => 35, 'macOS' => 20])->toSvg();
 ```
+
+## Combo charts (dual axis)
+
+Mix bars with a line/area in one chart, each bound to its own axis. The secondary (right)
+axis is scaled independently, so you never pre-scale the line's values:
+
+```php
+use HBVSoft\ChartHandler\Chart;
+use HBVSoft\ChartHandler\Spec\Axis;
+
+Chart::combo()
+    ->addBar('Revenue', [120, 190, 70, 220])
+    ->addLine('Conversion %', [3.2, 4.1, 2.8, 5.0], Axis::Right)  // right axis, own scale
+    ->title('Revenue vs conversion')
+    ->categories(['Q1', 'Q2', 'Q3', 'Q4'])
+    ->toEmailImg();
+```
+
+`addBar()`, `addLine()`, and `addArea()` each take
+`(string $name, array|Series $data, Axis $axis = Axis::Left)`.
 
 ## Output methods
 

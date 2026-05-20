@@ -6,10 +6,12 @@ use HBVSoft\ChartHandler\Exception\InvalidChartDataException;
 use HBVSoft\ChartHandler\Output\Format;
 use HBVSoft\ChartHandler\Output\RenderedChart;
 use HBVSoft\ChartHandler\Rendering\RendererRegistry;
+use HBVSoft\ChartHandler\Spec\Axis;
 use HBVSoft\ChartHandler\Spec\ChartSpec;
 use HBVSoft\ChartHandler\Spec\ChartType;
 use HBVSoft\ChartHandler\Spec\LegendPosition;
 use HBVSoft\ChartHandler\Spec\Series;
+use HBVSoft\ChartHandler\Spec\SeriesType;
 use HBVSoft\ChartHandler\Spec\Theme;
 use InvalidArgumentException;
 
@@ -89,6 +91,19 @@ final class Chart
         return new self(ChartType::Area, self::normalize($data, 'Series'));
     }
 
+    /**
+     * A combo chart: add bar/line/area series with per-series axis assignment.
+     *
+     *   Chart::combo()
+     *       ->addBar('Revenue', [120, 190, 70, 220])
+     *       ->addLine('Conversion %', [3.2, 4.1, 2.8, 5.0], Axis::Right)
+     *       ->categories(['Q1', 'Q2', 'Q3', 'Q4']);
+     */
+    public static function combo(): self
+    {
+        return new self(ChartType::Combo, []);
+    }
+
     // --- Fluent configuration ---------------------------------------------------
 
     public function title(string $title): self
@@ -116,6 +131,52 @@ final class Chart
         $this->series = [...$this->series, ...self::normalize($data, $name)];
 
         return $this;
+    }
+
+    /**
+     * Add a bar series to a combo chart, bound to the given axis.
+     *
+     * @param Series|array<array-key, int|float> $data
+     */
+    public function addBar(string $name, Series|array $data, Axis $axis = Axis::Left): self
+    {
+        $this->series[] = $this->comboSeries($name, $data, SeriesType::Bar, $axis);
+
+        return $this;
+    }
+
+    /**
+     * Add a line series to a combo chart, bound to the given axis.
+     *
+     * @param Series|array<array-key, int|float> $data
+     */
+    public function addLine(string $name, Series|array $data, Axis $axis = Axis::Left): self
+    {
+        $this->series[] = $this->comboSeries($name, $data, SeriesType::Line, $axis);
+
+        return $this;
+    }
+
+    /**
+     * Add an area series to a combo chart, bound to the given axis.
+     *
+     * @param Series|array<array-key, int|float> $data
+     */
+    public function addArea(string $name, Series|array $data, Axis $axis = Axis::Left): self
+    {
+        $this->series[] = $this->comboSeries($name, $data, SeriesType::Area, $axis);
+
+        return $this;
+    }
+
+    /**
+     * @param Series|array<array-key, int|float> $data
+     */
+    private function comboSeries(string $name, Series|array $data, SeriesType $type, Axis $axis): Series
+    {
+        $series = $data instanceof Series ? $data : Series::fromValues($name, $data);
+
+        return $series->withType($type)->withAxis($axis);
     }
 
     public function size(int $width, int $height): self

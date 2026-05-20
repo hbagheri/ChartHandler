@@ -7,8 +7,10 @@ use HBVSoft\ChartHandler\Exception\MissingExtensionException;
 use HBVSoft\ChartHandler\Output\Format;
 use HBVSoft\ChartHandler\Output\RenderedChart;
 use HBVSoft\ChartHandler\Rendering\Svg\LinearScale;
+use HBVSoft\ChartHandler\Spec\Axis;
 use HBVSoft\ChartHandler\Spec\ChartSpec;
 use HBVSoft\ChartHandler\Spec\ChartType;
+use HBVSoft\ChartHandler\Spec\SeriesType;
 use RuntimeException;
 
 /**
@@ -42,6 +44,7 @@ final class GdRenderer extends AbstractRenderer
             ChartType::Bar,
             ChartType::Line,
             ChartType::Area,
+            ChartType::Combo,
         ];
     }
 
@@ -59,6 +62,7 @@ final class GdRenderer extends AbstractRenderer
             ChartType::Bar => $this->drawBars($img, $spec),
             ChartType::Line => $this->drawLines($img, $spec, false),
             ChartType::Area => $this->drawLines($img, $spec, true),
+            ChartType::Combo => $this->drawCombo($img, $spec),
             default => null, // unreachable: guarded by AbstractRenderer::render()
         };
 
@@ -257,12 +261,152 @@ final class GdRenderer extends AbstractRenderer
         $this->maybeSeriesLegend($img, $spec, $plot);
     }
 
+    // --- Combo: mixed series with an optional secondary axis --------------------
+
+    private function drawCombo(GdImage $img, ChartSpec $spec): void
+    {
+        $categories = PlotData::categories($spec);
+        $count = count($categories);
+        if ($count === 0) {
+            return;
+        }
+
+        [$leftScale, $rightScale] = $this->comboScales($spec);
+        $plot = $this->beginPlot($spec, $rightScale !== null);
+        $this->drawComboAxes($img, $plot, $leftScale, $rightScale);
+
+        $baseline = $plot['y'] + $plot['h'];
+        $groupWidth = $plot['w'] / $count;
+
+        $barCount = 0;
+        foreach ($spec->series as $series) {
+            if (($series->type ?? SeriesType::Line) === SeriesType::Bar) {
+                $barCount++;
+            }
+        }
+        $bandWidth = $groupWidth * 0.8;
+        $barWidth = $bandWidth / max(1, $barCount);
+
+        $barSlot = 0;
+        foreach ($spec->series as $si => $series) {
+            $type = $series->type ?? SeriesType::Line;
+            $scale = ($series->axis === Axis::Right && $rightScale !== null) ? $rightScale : $leftScale;
+            $hex = $series->color ?? $spec->theme->colorAt($si);
+            $color = $this->color($img, $hex);
+
+            if ($type === SeriesType::Bar) {
+                foreach ($series->points as $ci => $point) {
+                    if ($ci >= $count) {
+                        break;
+                    }
+                    $height = $scale->lengthOf(max(0.0, $point->value), $plot['h']);
+                    $bx = $plot['x'] + $ci * $groupWidth + ($groupWidth - $bandWidth) / 2 + $barSlot * $barWidth;
+                    $top = (int) round($baseline - $height);
+                    $bottom = (int) round($baseline);
+                    if ($bottom > $top) {
+                        imagefilledrectangle($img, (int) round($bx), $top, (int) round($bx + max(1.0, $barWidth - 1.0)), $bottom, $color);
+                    }
+                }
+                $barSlot++;
+
+                continue;
+            }
+
+            /** @var list<array{x: float, y: float}> $pts */
+            $pts = [];
+            foreach ($series->points as $ci => $point) {
+                if ($ci >= $count) {
+                    break;
+                }
+                $pts[] = [
+                    'x' => $plot['x'] + $ci * $groupWidth + $groupWidth / 2,
+                    'y' => $baseline - $scale->lengthOf(max(0.0, $point->value), $plot['h']),
+                ];
+            }
+            if ($pts === []) {
+                continue;
+            }
+
+            if ($type === SeriesType::Area) {
+                $polygon = [(int) round($pts[0]['x']), (int) round($baseline)];
+                foreach ($pts as $p) {
+                    $polygon[] = (int) round($p['x']);
+                    $polygon[] = (int) round($p['y']);
+                }
+                $polygon[] = (int) round($pts[count($pts) - 1]['x']);
+                $polygon[] = (int) round($baseline);
+                imagefilledpolygon($img, $polygon, $this->colorAlpha($img, $hex, 95));
+            }
+
+            imagesetthickness($img, 2);
+            for ($i = 1, $n = count($pts); $i < $n; $i++) {
+                imageline($img, (int) round($pts[$i - 1]['x']), (int) round($pts[$i - 1]['y']), (int) round($pts[$i]['x']), (int) round($pts[$i]['y']), $color);
+            }
+            imagesetthickness($img, 1);
+            foreach ($pts as $p) {
+                imagefilledellipse($img, (int) round($p['x']), (int) round($p['y']), 6, 6, $color);
+            }
+        }
+
+        $this->drawCategoryLabels($img, $categories, $plot, $groupWidth);
+        $this->maybeSeriesLegend($img, $spec, $plot);
+    }
+
+    /**
+     * @return array{0: LinearScale, 1: LinearScale|null}
+     */
+    private function comboScales(ChartSpec $spec): array
+    {
+        $leftMax = 0.0;
+        $rightMax = 0.0;
+        $hasRight = false;
+        foreach ($spec->series as $series) {
+            foreach ($series->points as $point) {
+                if ($series->axis === Axis::Right) {
+                    $rightMax = max($rightMax, $point->value);
+                    $hasRight = true;
+                } else {
+                    $leftMax = max($leftMax, $point->value);
+                }
+            }
+        }
+
+        return [new LinearScale($leftMax), $hasRight ? new LinearScale($rightMax) : null];
+    }
+
+    /**
+     * @param array{x: float, y: float, w: float, h: float} $plot
+     */
+    private function drawComboAxes(GdImage $img, array $plot, LinearScale $left, ?LinearScale $right): void
+    {
+        $baseline = $plot['y'] + $plot['h'];
+        $grid = $this->color($img, '#e5e5e5');
+        $axis = $this->color($img, '#999999');
+        $label = $this->color($img, '#666666');
+
+        for ($i = 0; $i <= 4; $i++) {
+            $fraction = $i / 4;
+            $y = $baseline - $fraction * $plot['h'];
+            imageline($img, (int) round($plot['x']), (int) round($y), (int) round($plot['x'] + $plot['w']), (int) round($y), $grid);
+            $this->text($img, 2, $plot['x'] - 6.0, $y, $this->num($left->max * $fraction), $label, 'right', 'middle');
+            if ($right !== null) {
+                $this->text($img, 2, $plot['x'] + $plot['w'] + 6.0, $y, $this->num($right->max * $fraction), $label, 'left', 'middle');
+            }
+        }
+
+        imageline($img, (int) round($plot['x']), (int) round($plot['y']), (int) round($plot['x']), (int) round($baseline), $axis);
+        imageline($img, (int) round($plot['x']), (int) round($baseline), (int) round($plot['x'] + $plot['w']), (int) round($baseline), $axis);
+        if ($right !== null) {
+            imageline($img, (int) round($plot['x'] + $plot['w']), (int) round($plot['y']), (int) round($plot['x'] + $plot['w']), (int) round($baseline), $axis);
+        }
+    }
+
     // --- Shared plumbing --------------------------------------------------------
 
     /**
      * @return array{x: float, y: float, w: float, h: float}
      */
-    private function beginPlot(ChartSpec $spec): array
+    private function beginPlot(ChartSpec $spec, bool $secondaryAxis = false): array
     {
         $theme = $spec->theme;
         $top = $spec->title !== '' ? 30.0 : 12.0;
@@ -271,7 +415,7 @@ final class GdRenderer extends AbstractRenderer
         }
 
         $marginLeft = 48.0;
-        $marginRight = 16.0;
+        $marginRight = $secondaryAxis ? 52.0 : 16.0;
         $marginBottom = 42.0;
 
         return [

@@ -19,6 +19,8 @@ final class Series
         public readonly string $name,
         array $points,
         public readonly ?string $color = null,
+        public readonly ?SeriesType $type = null,
+        public readonly Axis $axis = Axis::Left,
     ) {
         if ($points === []) {
             throw InvalidChartDataException::emptyPoints($name);
@@ -66,5 +68,15 @@ final class Series
     public function count(): int
     {
         return count($this->points);
+    }
+
+    public function withType(?SeriesType $type): self
+    {
+        return new self($this->name, $this->points, $this->color, $type, $this->axis);
+    }
+
+    public function withAxis(Axis $axis): self
+    {
+        return new self($this->name, $this->points, $this->color, $this->type, $axis);
     }
 }

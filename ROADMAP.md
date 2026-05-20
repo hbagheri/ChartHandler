@@ -70,8 +70,11 @@ raster→`GdRenderer`).
   types; shared `Rendering\PlotData` keeps both backends consistent.
 - **Fluent facade (Phase 3).** `Chart::pie($data)->title(...)->toEmailImg()` etc., backed by a
   `RendererRegistry`. Legacy Phase-0 skeleton removed — one clean API.
+- **Released v1.1.0 / v1.2.0.** Docs, examples, LICENSE, CHANGELOG, CI (PHP 8.1–8.3) shipped.
+- **Combo + dual-axis (v1.2.0).** `Chart::combo()->addBar()/addLine()/addArea(..., Axis::Right)` —
+  mixed series with an independently-scaled secondary axis, on both backends.
 
-_Current: 52 tests / 134 assertions green, PHPStan level 6 clean, on branch `roadmap-rework`._
+_Current: 58 tests / 159 assertions green, PHPStan level 6 clean._
 
 ---
 

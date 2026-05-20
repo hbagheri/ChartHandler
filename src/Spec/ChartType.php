@@ -18,6 +18,7 @@ enum ChartType: string
     case Line = 'line';
     case Area = 'area';
     case Scatter = 'scatter';
+    case Combo = 'combo';
 
     public function isAxisBased(): bool
     {
