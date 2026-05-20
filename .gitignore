@@ -1,5 +1,6 @@
 /vendor/
 composer.lock
+/examples/out/
 .phpunit.result.cache
 .phpunit.cache/
 /build/

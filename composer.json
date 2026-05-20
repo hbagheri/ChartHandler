@@ -4,6 +4,12 @@
     "type": "library",
     "license": "MIT",
     "keywords": ["chart", "graph", "svg", "png", "gd", "base64", "email"],
+    "authors": [
+        {
+            "name": "Hassan Bagheri",
+            "email": "hbagheri@glenar.com"
+        }
+    ],
     "require": {
         "php": ">=8.1"
     },
