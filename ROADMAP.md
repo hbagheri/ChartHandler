@@ -123,8 +123,8 @@ and the email-embedding recipe documented as a first-class path.
 ## Phase 5 — Docs, examples, CI & release v1.0  · ✅ DONE (pending tag)
 
 README, `examples/`, `LICENSE` (MIT), `CHANGELOG.md` (v1.0.0), and GitHub Actions CI
-(`composer validate` + PHPStan + PHPUnit on PHP 8.1–8.3 with gd) are in place. Remaining to
-cut the release: merge `roadmap-rework` → `main`, tag `v1.0.0`, and submit to Packagist.
+(`composer validate` + PHPStan + PHPUnit on PHP 8.1–8.3 with gd) are in place. Released as
+**v1.1.0** (the stale `1.0.0` tag predates this rewrite). Remaining: submit to Packagist.
 
 Ship a real, polished release with the core 5 types on both backends + the facade, **before**
 expanding chart types.

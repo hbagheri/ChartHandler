@@ -6,7 +6,10 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-05-20
+## [1.1.0] - 2026-05-20
+
+First functional release. (The earlier `1.0.0` tag pointed at an initial non-working
+skeleton and predates this rewrite.)
 
 ### Added
 - Fluent `Chart` facade: `Chart::pie/donut/bar/line/area(...)` with
@@ -22,5 +25,5 @@ All notable changes to this project are documented here. The format is based on
 - Typed exceptions under the `ChartHandlerException` marker interface.
 - README, examples, and CI (PHPStan level 6 + PHPUnit on PHP 8.1–8.3).
 
-[Unreleased]: https://github.com/hbagheri/ChartHandler/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/hbagheri/ChartHandler/releases/tag/v1.0.0
+[Unreleased]: https://github.com/hbagheri/ChartHandler/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/hbagheri/ChartHandler/releases/tag/v1.1.0
