@@ -2,14 +2,20 @@
 
 namespace HBVSoft\ChartHandler\Charts;
 
-class NonAxisChart extends AbstractChart {
-    protected \HBVSoft\Charts\Strategies\ChartStrategyInterface $strategy;
+use HBVSoft\ChartHandler\AbstractChart;
+use HBVSoft\ChartHandler\Strategies\ChartStrategyInterface;
 
-    public function __construct(\HBVSoft\Charts\Strategies\ChartStrategyInterface $strategy) {
+class NonAxisChart extends AbstractChart
+{
+    protected ChartStrategyInterface $strategy;
+
+    public function __construct(ChartStrategyInterface $strategy)
+    {
         $this->strategy = $strategy;
     }
 
-    public function render(): string {
+    public function render(): string
+    {
         return $this->strategy->draw($this->data);
     }
 }

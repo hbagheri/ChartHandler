@@ -1,0 +1,12 @@
+/vendor/
+composer.lock
+.phpunit.result.cache
+.phpunit.cache/
+/build/
+*.png
+*.jpg
+*.jpeg
+*.svg
+!docs/**/*.svg
+.idea/
+.vscode/

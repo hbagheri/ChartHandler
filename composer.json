@@ -1,23 +1,33 @@
 {
     "name": "hbvsoft/charthandler",
-    "description": "ChartHandler package with HBVSoft\\ChartHandler namespace",
+    "description": "Extensible PHP charting library with pluggable rendering backends and multiple output formats (PNG/JPEG/SVG, base64/data-URI).",
     "type": "library",
-    "version": "1.0.0",
+    "license": "MIT",
+    "keywords": ["chart", "graph", "jpgraph", "svg", "png", "base64"],
     "require": {
-        "php": ">=8.0",
-        "hbvsoft/jpgraph": "^1.0"
+        "php": ">=8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5",
+        "phpstan/phpstan": "^1.11"
+    },
+    "suggest": {
+        "hbvsoft/jpgraph": "Required for the jpgraph raster (PNG/JPEG) rendering backend; needs the GD extension. Added in Phase 2."
     },
     "autoload": {
         "psr-4": {
             "HBVSoft\\ChartHandler\\": "src/"
         }
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "git@github.com:hbagheri/ChartHandler.git"
+    "autoload-dev": {
+        "psr-4": {
+            "HBVSoft\\ChartHandler\\Tests\\": "tests/"
         }
-    ]
+    },
+    "scripts": {
+        "test": "phpunit",
+        "stan": "phpstan analyse"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }

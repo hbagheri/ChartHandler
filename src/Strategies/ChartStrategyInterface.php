@@ -1,15 +1,17 @@
 <?php
 
-namespace HBVSoft\ChartHandler\Charts\Strategies+-;
+namespace HBVSoft\ChartHandler\Strategies;
 
 interface ChartStrategyInterface
 {
     /**
-     * @param mixed $graph   main jpgraph object
-     * @param array $data   data
-     * @return mixed
+     * Render the given data into a chart representation.
      *
-     * this method is mandatory
+     * NOTE (Phase 0): strategies currently return a string placeholder. The real
+     * rendering pipeline (ChartSpec + pluggable backends producing image bytes) is
+     * introduced in Phase 1/2 of ROADMAP.md.
+     *
+     * @param array<int|string, mixed> $data
      */
     public function draw(array $data): string;
 }
