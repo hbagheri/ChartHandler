@@ -36,4 +36,27 @@ final class Theme
 
         return $palette[$index % count($palette)];
     }
+
+    public function withSize(int $width, int $height): self
+    {
+        return new self($width, $height, $this->palette, $this->background, $this->fontFamily, $this->legend);
+    }
+
+    public function withLegend(LegendPosition $legend): self
+    {
+        return new self($this->width, $this->height, $this->palette, $this->background, $this->fontFamily, $legend);
+    }
+
+    /**
+     * @param list<string> $palette
+     */
+    public function withPalette(array $palette): self
+    {
+        return new self($this->width, $this->height, $palette, $this->background, $this->fontFamily, $this->legend);
+    }
+
+    public function withBackground(?string $background): self
+    {
+        return new self($this->width, $this->height, $this->palette, $background, $this->fontFamily, $this->legend);
+    }
 }

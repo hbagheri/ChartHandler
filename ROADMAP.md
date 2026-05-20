@@ -67,10 +67,11 @@ raster→`GdRenderer`).
 - **SVG backend.** `Rendering\SvgRenderer` for **pie, donut, bar, line, area** — legend,
   axis scaling, escaped labels. Proven end-to-end as inline data-URI `<img>` in the playground.
 - **GD raster backend (Phase 2).** `Rendering\GdRenderer` → PNG/JPEG/GIF/WebP for the same 5
-  types; shared `Rendering\PlotData` keeps both backends consistent. Proven in the playground
-  (`GET /charts`) rendering PNG + SVG side by side as inline data-URIs.
+  types; shared `Rendering\PlotData` keeps both backends consistent.
+- **Fluent facade (Phase 3).** `Chart::pie($data)->title(...)->toEmailImg()` etc., backed by a
+  `RendererRegistry`. Legacy Phase-0 skeleton removed — one clean API.
 
-_Current: 43 tests / 115 assertions green, PHPStan level 6 clean, on branch `roadmap-rework`._
+_Current: 52 tests / 134 assertions green, PHPStan level 6 clean, on branch `roadmap-rework`._
 
 ---
 
@@ -89,7 +90,14 @@ work across all clients.**
 **Done when:** the same `ChartSpec` renders to PNG and SVG by changing one argument, and a
 PNG chart round-trips through `RenderedChart` to a data-URI `<img>`.
 
-## Phase 3 — Fluent facade (developer experience)
+## Phase 3 — Fluent facade (developer experience)  · ✅ DONE
+
+Delivered `Chart` (factories pie/donut/bar/line/area; fluent
+`title/categories/size/legend/palette/background/addSeries`; output
+`toSvg/toPng/toJpeg/toDataUri/toHtmlImg/toEmailImg/save/render`), a `RendererRegistry`
+(format→backend, GD lazy), and immutable `Theme::with*` helpers. The legacy Phase-0
+Strategy skeleton (`ChartHandler`, `AbstractChart`, `Charts\*`, `Strategies\*`) was removed
+so the package has one clean entry point. Playground `GET /charts` now built via the facade.
 
 A high-level API so callers don't assemble `ChartSpec` + renderer by hand.
 
