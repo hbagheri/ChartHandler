@@ -88,7 +88,11 @@ Lock the core abstractions before building features.
 
 **Done when:** interfaces + value objects exist with unit tests; no rendering yet.
 
-## Phase 2 — First vertical slice (pie, end-to-end)
+## Phase 2 — jpgraph raster backend (PNG/JPEG)  · ⏸ DEFERRED
+
+Deferred until the `hbvsoft/jpgraph` dependency source is decided (the fork is not yet
+installable — no repository entry / Packagist listing). We built the SVG backend first
+(Phase 3) instead, which proves the full pipeline with zero binary deps.
 
 Prove the full pipeline with one type and one backend.
 
@@ -99,7 +103,14 @@ Prove the full pipeline with one type and one backend.
 
 **Done when:** can generate a pie PNG, save it, get a base64 data-URI, and embed it in HTML.
 
-## Phase 3 — SVG backend
+## Phase 3 — SVG backend  · ✅ DONE (done first, ahead of jpgraph)
+
+Delivered `Rendering\SvgRenderer` (pure PHP, no GD) covering **pie, donut, bar, line, area**
+— already pulling some Phase 4 coverage forward — with legend, axis scaling (`LinearScale`
+nice-max ticks), category labels, and XML-escaped labels. Verified end-to-end in the
+playground at `GET /charts/svg`: each chart embeds as an inline base64 `data:` `<img>` with
+zero external requests (the offline-email use case). Remaining for Phase 4: stacked bar,
+scatter.
 
 Second backend to validate the abstraction (pure PHP, no GD dependency).
 
